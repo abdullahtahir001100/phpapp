@@ -20,7 +20,7 @@ class Database
     {
         $this->servername = getenv('DB_HOST') ?: 'uzgoah.stackhero-network.com';
         $this->username = getenv('DB_USERNAME') ?: 'root';
-        $this->password = getenv('DB_PASSWORD') ?: '';
+        $this->password = getenv('DB_PASSWORD') ?: 'zukBywBtRPTqfrwFTTqv2lPYG1cjKaPn';
         $this->port = (int)(getenv('DB_PORT') ?: 7406);
 
         $this->conn = mysqli_init();
@@ -624,7 +624,7 @@ class Database
 }
 
 
-$db = new Database("database");
+$db = new Database("root");
 
 /**
  * 1. DEPARTMENTS

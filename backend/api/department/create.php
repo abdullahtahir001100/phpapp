@@ -617,7 +617,7 @@ class Database
 
 header('Content-Type: application/json');
 
-$db = new Database("database");
+$db = new Database("root");
 
 // echo $_POS-T["camond"];
 
