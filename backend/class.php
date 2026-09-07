@@ -1,23 +1,47 @@
 <?php
+
 class Database
 {
     private $conn;
 
-    // ✅ Constructor connects to DB
+    // ==============================
+    // DATABASE CONFIGURATION
+    // ==============================
+    private $servername = "uzgoah.stackhero-network.com";
+    private $username   = "root";
+    private $password   = "YOUR_DATABASE_PASSWORD";
+    private $port       = 7406;
+
+    // ==============================
+    // Constructor connects to DB
+    // ==============================
     public function __construct($databaseName)
     {
-        $servername = "localhost";
-        $username = "root";
-        $password = "";
-        $dbname = "$databaseName";
+        $this->conn = mysqli_init();
 
-        $this->conn = mysqli_connect($servername, $username, $password, $dbname);
+        // Connect using SSL and custom port
+        $connected = $this->conn->real_connect(
+            $this->servername,
+            $this->username,
+            $this->password,
+            $databaseName,
+            $this->port,
+            NULL,
+            MYSQLI_CLIENT_SSL
+        );
 
-        if (!$this->conn) {
-            die("Connection failed: " . mysqli_connect_error());
+        if (!$connected) {
+            die("Connection failed: " . $this->conn->connect_error);
         }
+
+        // UTF-8 support
+        $this->conn->set_charset("utf8mb4");
     }
 
+
+    // ==============================
+    // SELECT TABLE
+    // ==============================
     public function selectTable($tablename)
     {
         $sql = "SELECT * FROM `$tablename`";
@@ -25,330 +49,567 @@ class Database
 
         if ($result && mysqli_num_rows($result) > 0) {
 
-            // ✅ Get all column names dynamically
             $columns = array_keys(mysqli_fetch_assoc($result));
-            mysqli_data_seek($result, 0); // Reset pointer to first row
+            mysqli_data_seek($result, 0);
 
             echo "<tbody>";
 
-            // 🔹 Map of foreign key columns to lookup table & column
+            // Foreign key mappings
             $foreignKeys = [
                 "vendor"   => ["users", "name"],
                 "customer" => ["users", "name"],
                 "item"     => ["items", "name"]
             ];
 
-            // ✅ Loop through all rows dynamically
             while ($row = mysqli_fetch_assoc($result)) {
+
                 echo "<tr>";
+
                 foreach ($columns as $col) {
 
-                    // 🔹 If the column is a foreign key, replace ID with name
                     if (isset($foreignKeys[$col])) {
+
                         [$table, $colName] = $foreignKeys[$col];
+
                         $id = $row[$col];
-                        $value = $this->selectOneWhere($table, $colName, "id='$id'");
-                        echo "<td>" . htmlspecialchars($value ?? $id) . "</td>";
+
+                        $value = $this->selectOneWhere(
+                            $table,
+                            $colName,
+                            "id='" . mysqli_real_escape_string($this->conn, $id) . "'"
+                        );
+
+                        echo "<td>" .
+                            htmlspecialchars($value ?? $id) .
+                            "</td>";
+
                     } else {
-                        // default output
-                        echo "<td>" . htmlspecialchars($row[$col]) . "</td>";
+
+                        echo "<td>" .
+                            htmlspecialchars($row[$col]) .
+                            "</td>";
                     }
                 }
 
-                // ✅ Add Update & Delete buttons automatically
+                // Update & Delete buttons
                 echo "<td>
-                <a href='" . $tablename . "_view.php?editid=" . $row["id"] . "' 
-                   class='btn btn-warning btn-sm text-dark btn-update-" . $tablename . "'>
-                   ✏️ Update
-                </a>
-                <a href='delete.php?deleteid=" . $row["id"] . "' 
-                   class='btn btn-danger btn-sm text-dark'>
-                   🗑️ Delete
-                </a>
-              </td>";
+                    <a href='" . htmlspecialchars($tablename) . "_view.php?editid=" . intval($row["id"]) . "'
+                       class='btn btn-warning btn-sm text-dark btn-update-" . htmlspecialchars($tablename) . "'>
+                       ✏️ Update
+                    </a>
+
+                    <a href='delete.php?deleteid=" . intval($row["id"]) . "'
+                       class='btn btn-danger btn-sm text-dark'>
+                       🗑️ Delete
+                    </a>
+                </td>";
 
                 echo "</tr>";
             }
 
             echo "</tbody>";
+
         } else {
-            echo "<p class='text-danger'>No records found in table <b>$tablename</b>.</p>";
+
+            echo "<p class='text-danger'>
+                    No records found in table
+                    <b>" . htmlspecialchars($tablename) . "</b>.
+                  </p>";
         }
     }
 
 
+    // ==============================
+    // SELECT ONE WHERE
+    // ==============================
     public function selectOneWhere($table, $column, $condition)
     {
-        $sql = "SELECT `$column` FROM `$table` WHERE $condition LIMIT 1";
+        $sql = "SELECT `$column`
+                FROM `$table`
+                WHERE $condition
+                LIMIT 1";
+
         $result = mysqli_query($this->conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
+
             $row = mysqli_fetch_assoc($result);
-            return $row[$column];   // return value
+
+            return $row[$column];
         }
 
-        return null; // not found
+        return null;
     }
 
-    // select from
+
+    // ==============================
+    // SELECT ALL WHERE
+    // ==============================
     public function selectAllWhere($table, $condition)
     {
+        $sql = "SELECT *
+                FROM `$table`
+                WHERE $condition";
 
-        $sql = "SELECT * FROM `$table` WHERE $condition";
         $result = mysqli_query($this->conn, $sql);
 
         $data = [];
+
         if ($result && mysqli_num_rows($result) > 0) {
+
             while ($row = mysqli_fetch_assoc($result)) {
                 $data[] = $row;
             }
         }
+
         return $data;
     }
 
 
-
-    /**
-     * Execute a raw SQL query
-     * @param string $sql The raw SQL string
-     * @return mixed Array of rows for SELECT, boolean/ID for others
-     */
+    // ==============================
+    // RAW QUERY
+    // ==============================
     public function rawQuery($sql)
     {
         $result = mysqli_query($this->conn, $sql);
 
-        // If query failed
         if (!$result) {
-            die("Raw Query Error: " . mysqli_error($this->conn) . " | SQL: " . $sql);
+
+            die(
+                "Raw Query Error: " .
+                mysqli_error($this->conn) .
+                " | SQL: " .
+                $sql
+            );
         }
 
-        // If it's a SELECT, SHOW, DESCRIBE or EXPLAIN query, return the data
         if ($result instanceof mysqli_result) {
+
             $data = [];
+
             while ($row = mysqli_fetch_assoc($result)) {
                 $data[] = $row;
             }
+
             mysqli_free_result($result);
+
             return $data;
         }
 
-        // For INSERT, UPDATE, DELETE, etc., return true
         return true;
     }
 
 
+    // ==============================
+    // SAFE QUERY
+    // ==============================
     public function safeQuery($sql, $params = [], $types = "")
     {
         $stmt = mysqli_prepare($this->conn, $sql);
+
         if (!$stmt) {
             die("Statement Error: " . mysqli_error($this->conn));
         }
 
         if (!empty($params)) {
-            // If types are not provided, assume they are all strings
+
             $types = $types ?: str_repeat("s", count($params));
-            mysqli_stmt_bind_param($stmt, $types, ...$params);
+
+            mysqli_stmt_bind_param(
+                $stmt,
+                $types,
+                ...$params
+            );
         }
 
-        mysqli_stmt_execute($stmt);
+        if (!mysqli_stmt_execute($stmt)) {
+
+            die(
+                "Execute Error: " .
+                mysqli_stmt_error($stmt)
+            );
+        }
+
         $result = mysqli_stmt_get_result($stmt);
 
         if ($result) {
-            $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+            $data = mysqli_fetch_all(
+                $result,
+                MYSQLI_ASSOC
+            );
+
             mysqli_free_result($result);
+
             return $data;
         }
 
         return mysqli_stmt_affected_rows($stmt);
     }
 
-    public function getTotalQuantity($table, $columnToSum, $whereColumn, $whereValue)
-    {
-        // Escape values to prevent SQL injection
-        $whereValue = mysqli_real_escape_string($this->conn, $whereValue);
 
-        $sql = "SELECT SUM(`$columnToSum`) AS total 
-            FROM `$table` 
-            WHERE `$whereColumn` = '$whereValue' 
-            GROUP BY `$whereColumn`";
+    // ==============================
+    // GET TOTAL QUANTITY
+    // ==============================
+    public function getTotalQuantity(
+        $table,
+        $columnToSum,
+        $whereColumn,
+        $whereValue
+    ) {
+
+        $whereValue = mysqli_real_escape_string(
+            $this->conn,
+            $whereValue
+        );
+
+        $sql = "SELECT SUM(`$columnToSum`) AS total
+                FROM `$table`
+                WHERE `$whereColumn` = '$whereValue'
+                GROUP BY `$whereColumn`";
 
         $result = mysqli_query($this->conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
+
             $row = mysqli_fetch_assoc($result);
-            return (float)$row['total']; // return sum
+
+            return (float)$row['total'];
         }
 
-        return 0; // return 0 if no rows found
+        return 0;
     }
 
+
+    // ==============================
+    // SELECT COLUMN
+    // ==============================
     public function selectColumn($table, $column)
     {
-        $sql = "SELECT `$column` FROM `$table`";
+        $sql = "SELECT `$column`
+                FROM `$table`";
+
         $result = mysqli_query($this->conn, $sql);
 
         $data = [];
+
         if ($result && mysqli_num_rows($result) > 0) {
+
             while ($row = mysqli_fetch_assoc($result)) {
+
                 $data[] = $row[$column];
             }
         }
+
         return $data;
     }
+
+
+    // ==============================
+    // SELECT ALL
+    // ==============================
     public function selectAll($table)
     {
-        $sql = "SELECT * FROM `$table`";
+        $sql = "SELECT *
+                FROM `$table`";
+
         $result = mysqli_query($this->conn, $sql);
 
         $data = [];
+
         if ($result && mysqli_num_rows($result) > 0) {
+
             while ($row = mysqli_fetch_assoc($result)) {
-                $data[] = $row;   // return complete row
+
+                $data[] = $row;
             }
         }
+
         return $data;
     }
-        
-    public function selectColumnWhere($table, $column, $condition)
-    {
-        $sql = "SELECT `$column` FROM `$table` WHERE $condition";
+
+
+    // ==============================
+    // SELECT COLUMN WHERE
+    // ==============================
+    public function selectColumnWhere(
+        $table,
+        $column,
+        $condition
+    ) {
+
+        $sql = "SELECT `$column`
+                FROM `$table`
+                WHERE $condition";
+
         $result = mysqli_query($this->conn, $sql);
 
         $data = [];
+
         if ($result && mysqli_num_rows($result) > 0) {
+
             while ($row = mysqli_fetch_assoc($result)) {
+
                 $data[] = $row[$column];
             }
         }
+
         return $data;
     }
 
 
-
-    function update($Id, $arr, $table)
+    // ==============================
+    // UPDATE BY ID
+    // ==============================
+    public function update($Id, $arr, $table)
     {
-        // Get column names
-        // $cols = implode(",", array_keys($arr));
-        // $val = array();
+        $vals = [];
 
-        $vals = array();
+        foreach ($arr as $key => $value) {
 
-        foreach ($arr as $keys => $values) {
-            $vals[] = "`$keys`='" . addslashes($values) . "'";
+            $key = mysqli_real_escape_string(
+                $this->conn,
+                $key
+            );
+
+            $value = mysqli_real_escape_string(
+                $this->conn,
+                $value
+            );
+
+            $vals[] = "`$key`='$value'";
         }
-
-
-
 
         $cols = implode(",", $vals);
-        // echo $cols;
 
+        $Id = intval($Id);
 
-        $sql = "UPDATE $table SET $cols WHERE ID = '$Id'";
-
+        $sql = "UPDATE `$table`
+                SET $cols
+                WHERE id = $Id";
 
         if (mysqli_query($this->conn, $sql)) {
+
             return true;
+
         } else {
-            echo "Error: " . mysqli_error($this->conn);
+
+            echo "Error: " .
+                mysqli_error($this->conn);
+
             return false;
         }
     }
 
-    public function updateWhere($table, $data, $condition)
-{
-    // Build the "column = value" part of the query
-    $updateParts = [];
-    foreach ($data as $column => $value) {
-        $updateParts[] = "`$column` = '$value'";
-    }
-    $updateString = implode(', ', $updateParts);
 
-    $sql = "UPDATE `$table` SET $updateString WHERE $condition";
-    
-    return mysqli_query($this->conn, $sql);
-}
-    // ✅ Insert method
-    function insert($arr, $table)
-    {
-        // Get column names
-        $cols = implode(",", array_keys($arr));
+    // ==============================
+    // UPDATE WHERE
+    // ==============================
+    public function updateWhere(
+        $table,
+        $data,
+        $condition
+    ) {
 
-        // Get values and escape them properly
-        $vals = array();
-        foreach ($arr as $key => $value) {
-            $vals[] = "'" . addslashes($value) . "'";
+        $updateParts = [];
+
+        foreach ($data as $column => $value) {
+
+            $column = mysqli_real_escape_string(
+                $this->conn,
+                $column
+            );
+
+            $value = mysqli_real_escape_string(
+                $this->conn,
+                $value
+            );
+
+            $updateParts[] =
+                "`$column` = '$value'";
         }
 
-        // Join all values with commas
-        $vals_str = implode(",", $vals);
+        $updateString =
+            implode(', ', $updateParts);
 
-        // Build SQL query
-        $sql = "INSERT INTO $table ($cols) VALUES ($vals_str)";
+        $sql = "UPDATE `$table`
+                SET $updateString
+                WHERE $condition";
 
-        // (Optional) Run the query if you have a connection, example:
-        // global $conn;
-        // mysqli_query($conn, $sql);
+        return mysqli_query(
+            $this->conn,
+            $sql
+        );
+    }
 
+
+    // ==============================
+    // INSERT
+    // ==============================
+    public function insert($arr, $table)
+    {
+        $columns = [];
+        $values = [];
+
+        foreach ($arr as $key => $value) {
+
+            $columns[] =
+                "`" .
+                mysqli_real_escape_string(
+                    $this->conn,
+                    $key
+                ) .
+                "`";
+
+            $values[] =
+                "'" .
+                mysqli_real_escape_string(
+                    $this->conn,
+                    $value
+                ) .
+                "'";
+        }
+
+        $cols = implode(",", $columns);
+        $vals = implode(",", $values);
+
+        $sql = "INSERT INTO `$table`
+                ($cols)
+                VALUES
+                ($vals)";
 
         if ($this->conn->query($sql) === TRUE) {
-            // ✅ You can now access insert_id
+
             return $this->conn->insert_id;
+
         } else {
-            die("Error: " . $this->conn->error);
+
+            die(
+                "Insert Error: " .
+                $this->conn->error
+            );
         }
     }
 
-    function delete($Id, $table)
+
+    // ==============================
+    // DELETE BY ID
+    // ==============================
+    public function delete($Id, $table)
     {
-        // Added 'intval' for safety to prevent SQL injection
         $safeId = intval($Id);
-        $sql = "DELETE FROM `$table` WHERE `id` = $safeId";
+
+        $sql = "DELETE FROM `$table`
+                WHERE `id` = $safeId";
 
         if (mysqli_query($this->conn, $sql)) {
-            return true; // Just return true so the script can continue
+
+            return true;
+
         } else {
-            echo "Error: " . mysqli_error($this->conn);
+
+            echo "Error: " .
+                mysqli_error($this->conn);
+
             return false;
         }
     }
 
-    public function deleteWhere($table, $condition)
-    {
-        $sql = "DELETE FROM `$table` WHERE $condition";
-        return mysqli_query($this->conn, $sql);
+
+    // ==============================
+    // DELETE WHERE
+    // ==============================
+    public function deleteWhere(
+        $table,
+        $condition
+    ) {
+
+        $sql = "DELETE FROM `$table`
+                WHERE $condition";
+
+        return mysqli_query(
+            $this->conn,
+            $sql
+        );
     }
 
-    function autogencode($table, $col, $cod)
-    {
-        $sql = "SELECT $col FROM $table ORDER BY id DESC LIMIT 1";
-        $result = mysqli_query($this->conn, $sql);
+
+    // ==============================
+    // AUTO GENERATE CODE
+    // ==============================
+    public function autogencode(
+        $table,
+        $col,
+        $cod
+    ) {
+
+        $sql = "SELECT `$col`
+                FROM `$table`
+                ORDER BY id DESC
+                LIMIT 1";
+
+        $result = mysqli_query(
+            $this->conn,
+            $sql
+        );
 
         if (!$result) {
-            die("Query failed: " . mysqli_error($this->conn));
+
+            die(
+                "Query failed: " .
+                mysqli_error($this->conn)
+            );
         }
 
         if (mysqli_num_rows($result) > 0) {
-            // mysqli_fetch_assoc() is a PHP function used to fetch one row from a MySQL query result as an associative array.
+
             $row = mysqli_fetch_assoc($result);
 
             $lastCode = $row[$col];
 
             if (!empty($lastCode)) {
-                // ✅ Remove prefix safely
 
-                // str_replace(search, replace, string);
-                $numericPart = str_replace($cod, '', $lastCode);
+                $numericPart =
+                    str_replace(
+                        $cod,
+                        '',
+                        $lastCode
+                    );
 
-                // ✅ Convert to integer and increment
-                $newNumericPart = (int)$numericPart + 1;
+                $newNumericPart =
+                    (int)$numericPart + 1;
 
-                // ✅ Return new formatted code
-                return $cod . str_pad($newNumericPart, 3, '0', STR_PAD_LEFT);
+                return $cod .
+                    str_pad(
+                        $newNumericPart,
+                        3,
+                        '0',
+                        STR_PAD_LEFT
+                    );
             }
         }
 
-        // ✅ If no previous record exists, start from prefix + 001
         return $cod . '001';
     }
+
+
+    // ==============================
+    // CLOSE CONNECTION
+    // ==============================
+    public function close()
+    {
+        if ($this->conn) {
+            $this->conn->close();
+        }
+    }
+
+
+    // ==============================
+    // GET CONNECTION
+    // ==============================
+    public function getConnection()
+    {
+        return $this->conn;
+    }
 }
+?>
