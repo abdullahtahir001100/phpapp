@@ -1,0 +1,427 @@
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Firefox */
+html {
+    scrollbar-width: none;
+}
+
+/* IE / Old Edge */
+body {
+    -ms-overflow-style: none;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+}
+
+:root {
+    --sidebar-width: 260px;
+    --primary-color: #555;
+    --text-dark: #222;
+    --text-light: #666;
+    --bg-white: #ffffff;
+    --bg-light: #fafafa;
+    --bg-hover: #f5f5f5;
+    --border-color: #ddd;
+    --transition: all 0.15s ease;
+}
+
+body {
+    background-color: var(--bg-white);
+    color: var(--text-dark);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* This ensures the tick icon is hidden by default */
+.hs-selected-icon {
+    display: none !important;
+}
+
+/* When the item is selected, show the tick icon */
+.selected .hs-selected-icon,
+[data-hs-select-option].selected .hs-selected-icon {
+    display: block !important;
+}
+
+/* Style for the multi-select container to match your theme */
+.hs-select-active .hs-select-dropdown {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Sidebar Styling */
+.sidebar-container {
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    background-color: var(--bg-light);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    padding: 20px 0;
+}
+
+.sidebar-header {
+    padding: 0 25px 20px 25px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    color: var(--text-dark);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+/* Nav Link Styling with Icons */
+.nav-pills .nav-link {
+    color: var(--text-light);
+    border-radius: 1px;
+    /* Matches your $radius */
+    padding: 12px 25px;
+    font-size: 14px;
+    transition: var(--transition);
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+
+.nav-pills .nav-link i {
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+.nav-pills .nav-link:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-dark);
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--primary-color) !important;
+    color: var(--bg-white) !important;
+}
+
+/* Content Area */
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 40px;
+    width: 100%;
+}
+
+.tab-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    font-weight: 300;
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .sidebar-container {
+        width: 100%;
+        position: relative;
+        min-height: auto;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+.modal-backdrop {
+    display: block;
+}
+
+/* 1. The container must be relative so the dropdown knows where to sit */
+.action-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* 2. Adjusted Dropdown Positioning */
+.actions-dropdown {
+    display: none;
+    /* Hidden by default - toggle with JS or :hover */
+    flex-direction: column;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
+
+    /* Alignment Logic */
+    position: absolute;
+    top: 100%;
+    /* Places it exactly below the button */
+    right: 0;
+    /* Aligns the right edge of dropdown with right edge of button */
+    z-index: 100;
+    margin-top: 2px;
+}
+
+/* 3. Show dropdown when hovering over the container (Optional) */
+.actions-dropdown {
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.5s ease;
+}
+
+.action-container:hover .actions-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Your existing action-item styles... */
+.action-item {
+    background: none;
+    border: none;
+    padding: 10px 15px !important;
+    text-align: left !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    width: 100% !important;
+    color: #1b1b1b !important;
+}
+
+.action-item+.action-item {
+    border-top: 1px solid #eee !important;
+}
+
+/* Hover effect to make it interactive */
+.action-item:hover {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #444;
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    text-transform: uppercase;
+    font-size: 13px;
+    color: #666;
+    letter-spacing: 0.5px;
+}
+
+/* Employee Name & Email stacking */
+.emp-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.emp-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.emp-email {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Status Badge (The "Meneger" box) */
+.badge-status {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+/* Action Button */
+.btn-action {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 6px 15px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    color: #555 !important;
+}
+
+.btn-action:hover {
+    background: #f0f0f0;
+}
+
+/* question acr  */
+
+
+#question_add {
+    display: none;
+}
+
+/* Custom tweaks to match your image exactly */
+.grid-header {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+}
+
+.grid-row {
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+    align-items: center;
+}
+
+.form-control::placeholder {
+    color: #ccc;
+}
+
+.rating-box {
+    border: 1px solid #dee2e6;
+    padding: 6px 12px;
+    display: inline-block;
+    min-width: 45px;
+    text-align: center;
+    width: 75%;
+}
+
+.btn-outline-secondary {
+    border-color: #dee2e6;
+    color: #666;
+}
+
+.subindex {
+    color: #666666a6 !important;
+    font-weight: 400 !important;
+}
+
+.table-responsive{
+    overflow: unset;
+}
+.mark-questions {
+    display: none;
+}
+
+.main-container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin: 30px auto;
+    max-width: 1100px;
+}
+
+/* Header styling */
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+/* Section styling */
+.section-header {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #212529;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #212529;
+    /* Thick black line from the image */
+}
+
+/* Form/Info labels */
+.info-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 0.3rem;
+}
+
+.info-value {
+    font-size: 1rem;
+    /* Kept large and readable */
+    color: #212529;
+}
+
+/* Table styling */
+.table thead th {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    text-transform: uppercase;
+    border-bottom: 1px solid #dee2e6;
+    padding: 12px 16px;
+}
+
+.table tbody td {
+    font-size: 1rem;
+    /* Larger font size for table data */
+    vertical-align: middle;
+    color: #212529;
+    padding: 16px;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+/* Input styling */
+.points-input {
+    width: 80px;
+    text-align: center;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 1rem;
+}
+
+.points-input:focus {
+    outline: none;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Buttons */
+.btn-black {
+    background-color: #212529;
+    color: #fff;
+    border: none;
+    font-size: 1rem;
+    padding: 8px 20px;
+}
+
+.btn-black:hover {
+    background-color: #000;
+    color: #fff;
+}
+
+.btn-outline-custom {
+    border: 1px solid #ced4da;
+    color: #495057;
+    background-color: transparent;
+    font-size: 0.95rem;
+}
+
+.btn-outline-custom:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+/* Thick top border for Questions section */
+.thick-top-border {
+    border-top: 2px solid #212529;
+    padding-top: 1.5rem;
+    margin-top: 2.5rem;
+}
