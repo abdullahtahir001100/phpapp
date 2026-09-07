@@ -7,16 +7,21 @@ class Database
     // ==============================
     // DATABASE CONFIGURATION
     // ==============================
-    private $servername = "uzgoah.stackhero-network.com";
-    private $username   = "root";
-    private $password   = "YOUR_DATABASE_PASSWORD";
-    private $port       = 7406;
+    private $servername;
+    private $username;
+    private $password;
+    private $port;
 
     // ==============================
     // Constructor connects to DB
     // ==============================
     public function __construct($databaseName)
     {
+        $this->servername = getenv('DB_HOST') ?: 'uzgoah.stackhero-network.com';
+        $this->username = getenv('DB_USERNAME') ?: 'root';
+        $this->password = getenv('DB_PASSWORD') ?: '';
+        $this->port = (int)(getenv('DB_PORT') ?: 7406);
+
         $this->conn = mysqli_init();
 
         // Connect using SSL and custom port
@@ -31,7 +36,11 @@ class Database
         );
 
         if (!$connected) {
-            die("Connection failed: " . $this->conn->connect_error);
+            http_response_code(500);
+            die(json_encode([
+                'success' => false,
+                'message' => 'Database connection failed'
+            ]));
         }
 
         // UTF-8 support

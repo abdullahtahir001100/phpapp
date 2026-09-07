@@ -1,3 +1,13 @@
+const originalFetch = window.fetch.bind(window);
+window.fetch = (resource, options) => {
+    if (typeof resource === "string") {
+        resource = resource
+            .replace("http://localhost/php/ACR", "")
+            .replace("http://localhost/php/multipal%20inst/second_project/quary.php", "/backend/api/department/create.php");
+    }
+
+    return originalFetch(resource, options);
+};
 
  function alert(text,color){
 
