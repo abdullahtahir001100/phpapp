@@ -3,7 +3,7 @@
 $hostname = getenv('DB_HOST') ?: 'uzgoah.stackhero-network.com';
 $port = (int)(getenv('DB_PORT') ?: 7406);
 $user = getenv('DB_USERNAME') ?: 'root';
-$password = getenv('DB_PASSWORD') ?: '';
+$password = getenv('DB_PASSWORD') ?: 'zukBywBtRPTqfrwFTTqv2lPYG1cjKaPn';
 $database = getenv('DB_NAME') ?: 'root';
 
 $mysqli = mysqli_init();
